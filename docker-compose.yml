@@ -13,10 +13,14 @@ services:
 
   php-fpm:
     build:
-      context: ./docker/php
+      context: .
+      dockerfile: docker/php/Dockerfile
       target: fpm
     volumes:
-      - ./:/var/www/html
+      - ./src:/var/www/html/src
+      - ./bin:/var/www/html/bin
+      - ./public:/var/www/html/public
+      - ./.env:/var/www/html/.env:ro
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -36,10 +40,13 @@ services:
 
   php-worker:
     build:
-      context: ./docker/php
+      context: .
+      dockerfile: docker/php/Dockerfile
       target: cli
     volumes:
-      - ./:/var/www/html
+      - ./src:/var/www/html/src
+      - ./bin:/var/www/html/bin
+      - ./.env:/var/www/html/.env:ro
     command: php bin/worker.php
     depends_on:
       - rabbitmq
