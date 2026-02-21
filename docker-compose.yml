@@ -1,0 +1,80 @@
+version: "3.8"
+
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8083:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php-fpm
+
+  php-fpm:
+    build:
+      context: ./docker/php
+      target: fpm
+    volumes:
+      - ./:/var/www/html
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=finance
+      - DB_USER=finance_user
+      - DB_PASS=finance_pass
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+
+  php-worker:
+    build:
+      context: ./docker/php
+      target: cli
+    volumes:
+      - ./:/var/www/html
+    command: php bin/worker.php
+    depends_on:
+      - rabbitmq
+      - postgres
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=finance
+      - DB_USER=finance_user
+      - DB_PASS=finance_pass
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
+
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: finance
+      POSTGRES_USER: finance_user
+      POSTGRES_PASSWORD: finance_pass
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "15673:15672"
+
+volumes:
+  db-data:
