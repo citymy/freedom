@@ -16,7 +16,12 @@
 
 ## Запуск приложения
 
-1. Склонируйте репозиторий и перейдите в корень проекта.
+1. Склонируйте репозиторий:
+   ```bash
+   git init
+   git remote add origin https://github.com/citymy/freedom.git
+   git pull origin main
+   ```
 2. Соберите и запустите Docker-контейнеры:
    ```bash
    docker-compose up -d --build
