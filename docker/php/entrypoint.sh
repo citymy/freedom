@@ -10,6 +10,11 @@ fi
 echo "Installing composer dependencies..."
 composer install --no-interaction --prefer-dist --optimize-autoloader
 
+# Dynamically change ownership of the vendor directory to match the host directory owner
+HOST_UID=$(stat -c "%u" .)
+HOST_GID=$(stat -c "%g" .)
+chown -R $HOST_UID:$HOST_GID vendor/ 2>/dev/null
+
 # Run database migrations only for the main FPM container
 if [ "$1" = "php-fpm" ]; then
     echo "Running database migrations..."
