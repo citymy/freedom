@@ -34,9 +34,12 @@ services:
       - RABBITMQ_USER=guest
       - RABBITMQ_PASS=guest
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
   php-worker:
     build:
@@ -49,8 +52,10 @@ services:
       - ./.env:/var/www/html/.env:ro
     command: php bin/worker.php
     depends_on:
-      - rabbitmq
-      - postgres
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -74,6 +79,11 @@ services:
       POSTGRES_PASSWORD: finance_pass
     volumes:
       - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finance_user -d finance"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7-alpine
@@ -82,6 +92,11 @@ services:
     image: rabbitmq:3-management-alpine
     ports:
       - "15673:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
 
 volumes:
   db-data:
