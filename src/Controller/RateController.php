@@ -27,6 +27,10 @@ class RateController
                 $this->jsonResponse(['error' => 'Invalid or missing date. Format: YYYY-MM-DD'], 400);
             }
 
+            if ($date > (new \DateTime('today'))->format('Y-m-d')) {
+                $this->jsonResponse(['error' => 'Date cannot be in the future'], 400);
+            }
+
             if (!$base || strlen($base) !== 3) {
                 $this->jsonResponse(['error' => 'Invalid or missing base currency code (e.g. USD)'], 400);
             }
